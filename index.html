@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>소방기술사 합격 플래너</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg: #0f0f1a;
+  --card: #1a1a2e;
+  --card2: #16213e;
+  --accent: #e94560;
+  --accent2: #ff6b6b;
+  --green: #00b894;
+  --yellow: #fdcb6e;
+  --blue: #0984e3;
+  --text: #f0f0f0;
+  --text2: #a0a0b0;
+  --radius: 14px;
+}
+body {
+  font-family: -apple-system, 'Pretendard', 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 80px;
+  -webkit-tap-highlight-color: transparent;
+}
+.header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  padding: 20px 16px 16px;
+  position: sticky; top: 0; z-index: 100;
+  border-bottom: 1px solid rgba(233,69,96,0.3);
+}
+.header h1 { font-size: 18px; font-weight: 700; }
+.header .subtitle { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.phase-badge {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-top: 8px;
+}
+.dday {
+  float: right;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--accent2);
+  margin-top: -28px;
+}
+
+/* Tab Navigation */
+.tab-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--card);
+  display: flex;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tab-nav button {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text2);
+  font-size: 10px;
+  padding: 10px 0 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: color 0.2s;
+}
+.tab-nav button.active { color: var(--accent); }
+.tab-nav button svg { width: 22px; height: 22px; }
+
+.tab-content { display: none; padding: 16px; }
+.tab-content.active { display: block; }
+
+/* Cards */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.card-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card-title .icon { font-size: 16px; }
+
+/* Schedule */
+.schedule-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  gap: 12px;
+}
+.schedule-item:last-child { border-bottom: none; }
+.schedule-time {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent2);
+  min-width: 50px;
+  text-align: center;
+}
+.schedule-label { font-size: 13px; flex: 1; }
+.schedule-tag {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+.tag-study { background: rgba(233,69,96,0.2); color: var(--accent2); }
+.tag-work { background: rgba(9,132,227,0.2); color: var(--blue); }
+.tag-rest { background: rgba(0,184,148,0.2); color: var(--green); }
+.tag-class { background: rgba(253,203,110,0.2); color: var(--yellow); }
+
+/* Day selector */
+.day-selector {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.day-btn {
+  background: var(--card2);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text2);
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.day-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* Timer */
+.timer-display {
+  text-align: center;
+  padding: 30px 0;
+}
+.timer-time {
+  font-size: 64px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+}
+.timer-label { font-size: 13px; color: var(--text2); margin-top: 4px; }
+.timer-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+.timer-btn {
+  padding: 12px 32px;
+  border-radius: 30px;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.timer-btn:active { transform: scale(0.95); }
+.btn-start { background: var(--accent); color: #fff; }
+.btn-pause { background: var(--yellow); color: #000; }
+.btn-reset { background: rgba(255,255,255,0.1); color: var(--text); }
+.timer-presets {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.preset-btn {
+  background: var(--card2);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text2);
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+.preset-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* Progress */
+.progress-bar-wrap {
+  background: rgba(255,255,255,0.08);
+  border-radius: 10px;
+  height: 10px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
+.fill-red { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+.fill-green { background: linear-gradient(90deg, #00b894, #55efc4); }
+.fill-blue { background: linear-gradient(90deg, #0984e3, #74b9ff); }
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text2);
+}
+
+/* Milestone */
+.milestone-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  align-items: flex-start;
+}
+.milestone-item:last-child { border-bottom: none; }
+.milestone-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+.dot-done { background: var(--green); }
+.dot-current { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+.dot-future { background: rgba(255,255,255,0.2); }
+.milestone-info { flex: 1; }
+.milestone-date { font-size: 11px; color: var(--text2); }
+.milestone-name { font-size: 13px; font-weight: 600; margin-top: 2px; }
+.milestone-detail { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+/* Alarm */
+.alarm-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  gap: 12px;
+}
+.alarm-item:last-child { border-bottom: none; }
+.alarm-time-big { font-size: 20px; font-weight: 700; min-width: 70px; }
+.alarm-info { flex: 1; }
+.alarm-label { font-size: 13px; font-weight: 600; }
+.alarm-days { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.toggle {
+  width: 46px; height: 26px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 13px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.3s;
+  border: none;
+}
+.toggle.on { background: var(--green); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 22px; height: 22px;
+  background: #fff;
+  border-radius: 50%;
+  top: 2px; left: 2px;
+  transition: transform 0.3s;
+}
+.toggle.on::after { transform: translateX(20px); }
+
+/* Subnote counter */
+.counter-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 16px 0;
+}
+.counter-btn {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: none;
+  color: var(--accent);
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.counter-num {
+  font-size: 48px;
+  font-weight: 800;
+  min-width: 100px;
+  text-align: center;
+}
+.counter-target { font-size: 12px; color: var(--text2); text-align: center; }
+
+/* Principles */
+.principle-item {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.principle-item:last-child { border-bottom: none; }
+.principle-num {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+/* Weekly stats */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.stat-box {
+  background: var(--card2);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+}
+.stat-value {
+  font-size: 28px;
+  font-weight: 800;
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 4px;
+}
+.color-red { color: var(--accent2); }
+.color-green { color: var(--green); }
+.color-blue { color: var(--blue); }
+.color-yellow { color: var(--yellow); }
+
+/* Study log */
+.log-input-wrap {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.log-input {
+  flex: 1;
+  background: var(--card2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 13px;
+}
+.log-input::placeholder { color: var(--text2); }
+.log-add-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.log-list { margin-top: 10px; }
+.log-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 12px;
+}
+.log-entry-date { color: var(--text2); font-size: 11px; }
+.log-entry-hours { color: var(--green); font-weight: 700; }
+.log-del {
+  background: none; border: none; color: var(--text2);
+  font-size: 16px; cursor: pointer; padding: 0 4px;
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <h1>소방기술사 합격 플래너</h1>
+  <div class="subtitle">서복동 | 2026.03 ~ 2028.03</div>
+  <span class="phase-badge" id="phaseBadge">Phase 1: 기초 입문기</span>
+  <div class="dday" id="ddayText">D-730</div>
+</div>
+
+<!-- Tab Contents -->
+<div id="tab-schedule" class="tab-content active">
+  <div class="day-selector" id="daySelector"></div>
+  <div class="card" id="scheduleCard">
+    <div class="card-title"><span class="icon">&#128197;</span> 오늘의 일정</div>
+    <div id="scheduleList"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9200;</span> 다음 알람</div>
+    <div id="nextAlarm" style="font-size:13px; color:var(--text2);">알람 없음</div>
+  </div>
+</div>
+
+<div id="tab-timer" class="tab-content">
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9201;</span> 집중 타이머</div>
+    <div class="timer-display">
+      <div class="timer-time" id="timerDisplay">25:00</div>
+      <div class="timer-label" id="timerLabel">집중 학습 시간</div>
+    </div>
+    <div class="timer-buttons">
+      <button class="timer-btn btn-start" id="timerStartBtn" onclick="toggleTimer()">시작</button>
+      <button class="timer-btn btn-reset" onclick="resetTimer()">초기화</button>
+    </div>
+    <div class="timer-presets">
+      <button class="preset-btn active" onclick="setPreset(25,'집중 학습',this)">25분</button>
+      <button class="preset-btn" onclick="setPreset(50,'답안 작성',this)">50분</button>
+      <button class="preset-btn" onclick="setPreset(100,'실전 모의',this)">100분</button>
+      <button class="preset-btn" onclick="setPreset(5,'휴식',this)">5분 휴식</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128221;</span> 오늘 공부 기록</div>
+    <div class="log-input-wrap">
+      <input class="log-input" id="logHours" type="number" step="0.5" min="0" max="16" placeholder="시간 (예: 2)">
+      <input class="log-input" id="logMemo" type="text" placeholder="내용 (예: 화재역학)">
+      <button class="log-add-btn" onclick="addLog()">추가</button>
+    </div>
+    <div class="log-list" id="logList"></div>
+  </div>
+</div>
+
+<div id="tab-progress" class="tab-content">
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128200;</span> 이번 주 현황</div>
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="stat-value color-red" id="weekHours">0</div>
+        <div class="stat-label">이번 주 공부시간</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value color-green" id="totalHours">0</div>
+        <div class="stat-label">누적 공부시간</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value color-blue" id="streakDays">0</div>
+        <div class="stat-label">연속 학습일</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value color-yellow" id="subnoteCount">0</div>
+        <div class="stat-label">서브노트 개수</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128209;</span> 서브노트 카운터</div>
+    <div class="counter-wrap">
+      <button class="counter-btn" onclick="changeSubnote(-1)">-</button>
+      <div class="counter-num" id="subnoteDisplay">0</div>
+      <button class="counter-btn" onclick="changeSubnote(1)">+</button>
+    </div>
+    <div class="counter-target" id="subnoteTarget">목표: 300개 (Phase 2)</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill fill-red" id="subnoteFill" style="width:0%"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128293;</span> 전체 진행률</div>
+    <div style="margin-bottom:12px">
+      <div class="progress-text"><span>2년 로드맵</span><span id="roadmapPct">0%</span></div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill fill-blue" id="roadmapFill" style="width:0%"></div>
+      </div>
+    </div>
+    <div>
+      <div class="progress-text"><span>목표 누적시간 (3,000h)</span><span id="hoursPct">0%</span></div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill fill-green" id="hoursFill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-roadmap" class="tab-content">
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> 마일스톤</div>
+    <div id="milestoneList"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128161;</span> 합격 7원칙</div>
+    <div class="principle-item"><span class="principle-num">1</span>서브노트가 합격을 결정한다 — 시험 전날 전범위를 볼 수 있는 서브노트 없으면 합격 없다.</div>
+    <div class="principle-item"><span class="principle-num">2</span>그림을 그려라 — 답안에 그림/플로우차트 넣으면 분량과 점수 동시에 올라간다.</div>
+    <div class="principle-item"><span class="principle-num">3</span>기본이 장비된 사람을 뽑는 시험 — 고차원 학문 탐구자가 아니라 기본 충실함을 보는 시험이다.</div>
+    <div class="principle-item"><span class="principle-num">4</span>70% 빈출문제에 먼저 투자 — 어려운 킬러문항보다 확실한 기본 문제에 먼저 집중하라.</div>
+    <div class="principle-item"><span class="principle-num">5</span>법규는 시험 2~3개월 전에 최신화 — 법제처에서 비교표 뽑아 형광펜으로 표시하라.</div>
+    <div class="principle-item"><span class="principle-num">6</span>첫 시험은 '경험'이 목적 — 2027년 상반기 시험으로 실전 감각을 익혀라.</div>
+    <div class="principle-item"><span class="principle-num">7</span>체력/건강 관리는 필수 — 주 1회 운동, 7~8시간 수면 없으면 반드시 무너진다.</div>
+  </div>
+</div>
+
+<div id="tab-alarm" class="tab-content">
+  <div class="card" style="background:linear-gradient(135deg,#1a1a2e,#2d1f3d);border:1px solid rgba(233,69,96,0.3)">
+    <div class="card-title"><span class="icon">&#128197;</span> 캘린더 알람 내보내기</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5">
+      아래 버튼을 누르면 .ics 파일이 다운로드됩니다.<br>
+      핸드폰에서 열면 기본 캘린더에 반복 알람이 자동 등록됩니다.
+    </p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="log-add-btn" onclick="exportAllAlarms()" style="flex:1;padding:14px;font-size:14px">
+        &#128276; 전체 알람 캘린더로 내보내기
+      </button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <button class="log-add-btn" onclick="exportWeekdayAlarms()" style="flex:1;background:var(--blue)">
+        &#128188; 평일 알람만
+      </button>
+      <button class="log-add-btn" onclick="exportWeekendAlarms()" style="flex:1;background:var(--green)">
+        &#127774; 주말 알람만
+      </button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128276;</span> 학습 알람 설정</div>
+    <div id="alarmList"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">&#10133;</span> 알람 추가</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input id="newAlarmTime" type="time" class="log-input" style="flex:0 0 100px">
+      <input id="newAlarmLabel" type="text" class="log-input" placeholder="알람 이름">
+      <button class="log-add-btn" onclick="addAlarm()">추가</button>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap" id="newAlarmDays">
+      <button class="day-btn" data-day="0" onclick="toggleAlarmDay(this)">일</button>
+      <button class="day-btn" data-day="1" onclick="toggleAlarmDay(this)">월</button>
+      <button class="day-btn" data-day="2" onclick="toggleAlarmDay(this)">화</button>
+      <button class="day-btn" data-day="3" onclick="toggleAlarmDay(this)">수</button>
+      <button class="day-btn" data-day="4" onclick="toggleAlarmDay(this)">목</button>
+      <button class="day-btn" data-day="5" onclick="toggleAlarmDay(this)">금</button>
+      <button class="day-btn" data-day="6" onclick="toggleAlarmDay(this)">토</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Tab Nav -->
+<nav class="tab-nav">
+  <button class="active" onclick="switchTab('schedule',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    일정
+  </button>
+  <button onclick="switchTab('timer',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    타이머
+  </button>
+  <button onclick="switchTab('progress',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    현황
+  </button>
+  <button onclick="switchTab('roadmap',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+    로드맵
+  </button>
+  <button onclick="switchTab('alarm',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    알람
+  </button>
+</nav>
+
+<script>
+// ============ DATA ============
+const START_DATE = new Date(2026, 2, 10);
+const TARGET_DATE = new Date(2028, 2, 10);
+const TARGET_HOURS = 3000;
+const DAY_NAMES = ['일','월','화','수','목','금','토'];
+
+const SCHEDULES = {
+  weekday: [
+    { time: '07:00', label: '기상 / 준비', tag: 'rest' },
+    { time: '07:30', label: '아침 복습 (전날 암기)', tag: 'study' },
+    { time: '08:00', label: 'KMCP 업무', tag: 'work' },
+    { time: '12:00', label: '점심 식사', tag: 'rest' },
+    { time: '12:30', label: '점심 법규 읽기', tag: 'study' },
+    { time: '13:00', label: 'KMCP 업무', tag: 'work' },
+    { time: '20:00', label: '저녁 식사', tag: 'rest' },
+    { time: '20:30', label: '집중 공부 (서브노트/암기)', tag: 'study' },
+    { time: '22:30', label: '정리 / 다음날 준비', tag: 'rest' },
+    { time: '23:00', label: '취침', tag: 'rest' },
+  ],
+  saturday: [
+    { time: '08:00', label: '기상 / 준비', tag: 'rest' },
+    { time: '09:00', label: '이론 / 기출문제 풀이', tag: 'study' },
+    { time: '12:00', label: '점심 식사', tag: 'rest' },
+    { time: '13:00', label: '답안 작성 연습', tag: 'study' },
+    { time: '17:00', label: '휴식', tag: 'rest' },
+    { time: '17:30', label: '법규 / 암기 정리', tag: 'study' },
+    { time: '20:00', label: '저녁 식사 / 자유시간', tag: 'rest' },
+    { time: '23:00', label: '취침', tag: 'rest' },
+  ],
+  sunday: [
+    { time: '08:00', label: '기상 / 준비', tag: 'rest' },
+    { time: '09:00', label: '전주 수업 복습 / 예습', tag: 'study' },
+    { time: '11:30', label: '이동 / 점심', tag: 'rest' },
+    { time: '12:00', label: '학원 수업 직강', tag: 'class' },
+    { time: '19:00', label: '수업 정리 / 서브노트', tag: 'study' },
+    { time: '20:00', label: '저녁 식사 / 귀가', tag: 'rest' },
+    { time: '23:00', label: '취침', tag: 'rest' },
+  ]
+};
+
+const MILESTONES = [
+  { date:'2026.03~04', name:'전기기사 실기 학원', detail:'실기 시험 응시', phase:1 },
+  { date:'2026.04~05', name:'기계기사 실기 온라인', detail:'기계분야 기초 이해', phase:1 },
+  { date:'2026.05~08', name:'기본반 1회독', detail:'전범위 1회독 완료', phase:2 },
+  { date:'2026.09~12', name:'기본반 2~3회독 + 서브노트', detail:'서브노트 300개 작성', phase:2 },
+  { date:'2027.01~03', name:'심화반 + 서브노트 확장', detail:'서브노트 400개+', phase:3 },
+  { date:'2027.04~06', name:'답안 작성 + 1차 필기', detail:'필기시험 1차 응시', phase:3 },
+  { date:'2027.07~09', name:'연구반 + 암기', detail:'전범위 암기 50%', phase:4 },
+  { date:'2027.10~12', name:'모의고사 + 2차 필기', detail:'필기시험 2차 응시', phase:4 },
+  { date:'2028.01~03', name:'면접 대비 / 3차 필기', detail:'최종 합격', phase:5 },
+];
+
+const DEFAULT_ALARMS = [
+  { time:'07:00', label:'기상 + 아침 복습', days:[1,2,3,4,5], on:true },
+  { time:'12:30', label:'점심 법규 읽기', days:[1,2,3,4,5], on:true },
+  { time:'20:25', label:'저녁 집중 공부 준비', days:[1,2,3,4,5], on:true },
+  { time:'22:25', label:'공부 마무리 5분 전', days:[1,2,3,4,5], on:true },
+  { time:'09:00', label:'토요일 학습 시작', days:[6], on:true },
+  { time:'09:00', label:'일요일 복습 시작', days:[0], on:true },
+  { time:'11:30', label:'학원 이동 준비', days:[0], on:true },
+];
+
+// ============ STATE ============
+let state = loadState();
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem('fpe_state'));
+    if (s) return s;
+  } catch(e) {}
+  return {
+    subnotes: 0,
+    logs: [],
+    alarms: DEFAULT_ALARMS,
+    selectedDay: new Date().getDay(),
+  };
+}
+function saveState() { localStorage.setItem('fpe_state', JSON.stringify(state)); }
+
+// ============ TABS ============
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ============ D-DAY & PHASE ============
+function updateHeader() {
+  const now = new Date();
+  const diff = Math.ceil((TARGET_DATE - now) / (1000*60*60*24));
+  document.getElementById('ddayText').textContent = 'D-' + Math.max(0, diff);
+
+  let phase, phaseText;
+  const m = now.getFullYear()*100 + now.getMonth()+1;
+  if (m <= 202605) { phase=1; phaseText='Phase 1: 기초 입문기'; }
+  else if (m <= 202612) { phase=2; phaseText='Phase 2: 기본반 집중'; }
+  else if (m <= 202706) { phase=3; phaseText='Phase 3: 심화반'; }
+  else if (m <= 202712) { phase=4; phaseText='Phase 4: 연구반'; }
+  else { phase=5; phaseText='Phase 5: 최종 대비'; }
+  document.getElementById('phaseBadge').textContent = phaseText;
+
+  const totalDays = (TARGET_DATE - START_DATE)/(1000*60*60*24);
+  const elapsed = (now - START_DATE)/(1000*60*60*24);
+  const pct = Math.min(100, Math.max(0, (elapsed/totalDays*100))).toFixed(1);
+  document.getElementById('roadmapPct').textContent = pct+'%';
+  document.getElementById('roadmapFill').style.width = pct+'%';
+
+  return phase;
+}
+
+// ============ SCHEDULE ============
+function renderDaySelector() {
+  const wrap = document.getElementById('daySelector');
+  wrap.innerHTML = '';
+  DAY_NAMES.forEach((name, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'day-btn' + (i === state.selectedDay ? ' active' : '');
+    btn.textContent = name;
+    const today = new Date().getDay();
+    if (i === today) btn.textContent += '(오늘)';
+    btn.onclick = () => {
+      state.selectedDay = i;
+      renderDaySelector();
+      renderSchedule();
+    };
+    wrap.appendChild(btn);
+  });
+}
+
+function renderSchedule() {
+  const day = state.selectedDay;
+  let key = 'weekday';
+  if (day === 0) key = 'sunday';
+  else if (day === 6) key = 'saturday';
+
+  const list = document.getElementById('scheduleList');
+  const items = SCHEDULES[key];
+  list.innerHTML = items.map(s => `
+    <div class="schedule-item">
+      <div class="schedule-time">${s.time}</div>
+      <div class="schedule-label">${s.label}</div>
+      <span class="schedule-tag tag-${s.tag}">${
+        s.tag==='study'?'학습':s.tag==='work'?'업무':s.tag==='class'?'수업':'기타'
+      }</span>
+    </div>
+  `).join('');
+
+  updateNextAlarm();
+}
+
+// ============ TIMER ============
+let timerInterval = null;
+let timerSeconds = 25*60;
+let timerRunning = false;
+let timerTotal = 25*60;
+
+function updateTimerDisplay() {
+  const m = Math.floor(timerSeconds/60);
+  const s = timerSeconds%60;
+  document.getElementById('timerDisplay').textContent =
+    String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+function toggleTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timerStartBtn').textContent = '시작';
+    document.getElementById('timerStartBtn').className = 'timer-btn btn-start';
+  } else {
+    timerRunning = true;
+    document.getElementById('timerStartBtn').textContent = '일시정지';
+    document.getElementById('timerStartBtn').className = 'timer-btn btn-pause';
+    timerInterval = setInterval(() => {
+      timerSeconds--;
+      updateTimerDisplay();
+      if (timerSeconds <= 0) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        document.getElementById('timerStartBtn').textContent = '시작';
+        document.getElementById('timerStartBtn').className = 'timer-btn btn-start';
+        timerFinished();
+      }
+    }, 1000);
+  }
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSeconds = timerTotal;
+  updateTimerDisplay();
+  document.getElementById('timerStartBtn').textContent = '시작';
+  document.getElementById('timerStartBtn').className = 'timer-btn btn-start';
+}
+
+function setPreset(min, label, btn) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerTotal = min*60;
+  timerSeconds = timerTotal;
+  updateTimerDisplay();
+  document.getElementById('timerLabel').textContent = label + ' 시간';
+  document.getElementById('timerStartBtn').textContent = '시작';
+  document.getElementById('timerStartBtn').className = 'timer-btn btn-start';
+}
+
+function timerFinished() {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('타이머 완료!', { body: '수고했습니다! 잠시 쉬고 다시 집중하세요.', icon: 'icon-192.png' });
+  }
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0,200,400].forEach(delay => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 800;
+      g.gain.value = 0.3;
+      o.start(ctx.currentTime + delay/1000);
+      o.stop(ctx.currentTime + delay/1000 + 0.15);
+    });
+  } catch(e) {}
+}
+
+// ============ STUDY LOG ============
+function addLog() {
+  const hours = parseFloat(document.getElementById('logHours').value);
+  const memo = document.getElementById('logMemo').value.trim();
+  if (!hours || hours <= 0) return;
+  const entry = {
+    date: new Date().toISOString(),
+    hours: hours,
+    memo: memo || '학습',
+  };
+  state.logs.push(entry);
+  saveState();
+  document.getElementById('logHours').value = '';
+  document.getElementById('logMemo').value = '';
+  renderLogs();
+  updateStats();
+}
+
+function deleteLog(idx) {
+  state.logs.splice(idx, 1);
+  saveState();
+  renderLogs();
+  updateStats();
+}
+
+function renderLogs() {
+  const list = document.getElementById('logList');
+  const recent = state.logs.slice(-10).reverse();
+  list.innerHTML = recent.map((l, i) => {
+    const d = new Date(l.date);
+    const realIdx = state.logs.length - 1 - i;
+    return `<div class="log-entry">
+      <span class="log-entry-date">${d.getMonth()+1}/${d.getDate()}</span>
+      <span>${l.memo}</span>
+      <span class="log-entry-hours">${l.hours}h</span>
+      <button class="log-del" onclick="deleteLog(${realIdx})">×</button>
+    </div>`;
+  }).join('');
+}
+
+// ============ STATS ============
+function updateStats() {
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  weekStart.setHours(0,0,0,0);
+
+  let weekH = 0, totalH = 0;
+  state.logs.forEach(l => {
+    totalH += l.hours;
+    if (new Date(l.date) >= weekStart) weekH += l.hours;
+  });
+
+  document.getElementById('weekHours').textContent = weekH.toFixed(1);
+  document.getElementById('totalHours').textContent = totalH.toFixed(0);
+  document.getElementById('subnoteCount').textContent = state.subnotes;
+
+  // Streak
+  const daySet = new Set();
+  state.logs.forEach(l => {
+    const d = new Date(l.date);
+    daySet.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+  });
+  let streak = 0;
+  let check = new Date();
+  while (true) {
+    const key = `${check.getFullYear()}-${check.getMonth()}-${check.getDate()}`;
+    if (daySet.has(key)) { streak++; check.setDate(check.getDate()-1); }
+    else break;
+  }
+  document.getElementById('streakDays').textContent = streak;
+
+  // Hours progress
+  const pct = Math.min(100, (totalH/TARGET_HOURS*100)).toFixed(1);
+  document.getElementById('hoursPct').textContent = pct+'%';
+  document.getElementById('hoursFill').style.width = pct+'%';
+}
+
+// ============ SUBNOTE COUNTER ============
+function changeSubnote(delta) {
+  state.subnotes = Math.max(0, state.subnotes + delta);
+  saveState();
+  renderSubnote();
+  updateStats();
+}
+
+function renderSubnote() {
+  document.getElementById('subnoteDisplay').textContent = state.subnotes;
+  const phase = updateHeader();
+  let target = 300;
+  let phaseName = 'Phase 2';
+  if (phase >= 3) { target = 400; phaseName = 'Phase 3'; }
+  if (phase >= 4) { target = 500; phaseName = 'Phase 4+'; }
+  document.getElementById('subnoteTarget').textContent = `목표: ${target}개 (${phaseName})`;
+  const pct = Math.min(100, (state.subnotes/target*100));
+  document.getElementById('subnoteFill').style.width = pct+'%';
+}
+
+// ============ MILESTONES ============
+function renderMilestones() {
+  const now = new Date();
+  const currentPhase = updateHeader();
+  const list = document.getElementById('milestoneList');
+  list.innerHTML = MILESTONES.map((m, i) => {
+    let dotClass = 'dot-future';
+    if (m.phase < currentPhase) dotClass = 'dot-done';
+    else if (m.phase === currentPhase) dotClass = 'dot-current';
+    return `<div class="milestone-item">
+      <div class="milestone-dot ${dotClass}"></div>
+      <div class="milestone-info">
+        <div class="milestone-date">${m.date}</div>
+        <div class="milestone-name">${m.name}</div>
+        <div class="milestone-detail">${m.detail}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============ ALARMS ============
+function renderAlarms() {
+  const list = document.getElementById('alarmList');
+  list.innerHTML = state.alarms.map((a, i) => `
+    <div class="alarm-item">
+      <div class="alarm-time-big">${a.time}</div>
+      <div class="alarm-info">
+        <div class="alarm-label">${a.label}</div>
+        <div class="alarm-days">${a.days.map(d=>DAY_NAMES[d]).join(', ')}</div>
+      </div>
+      <button class="toggle ${a.on?'on':''}" onclick="toggleAlarm(${i})"></button>
+    </div>
+  `).join('');
+}
+
+function toggleAlarm(idx) {
+  state.alarms[idx].on = !state.alarms[idx].on;
+  saveState();
+  renderAlarms();
+  scheduleNotifications();
+}
+
+function toggleAlarmDay(btn) {
+  btn.classList.toggle('active');
+}
+
+function addAlarm() {
+  const time = document.getElementById('newAlarmTime').value;
+  const label = document.getElementById('newAlarmLabel').value.trim();
+  if (!time || !label) return;
+  const dayBtns = document.querySelectorAll('#newAlarmDays .day-btn.active');
+  const days = Array.from(dayBtns).map(b => parseInt(b.dataset.day));
+  if (days.length === 0) return;
+  state.alarms.push({ time, label, days, on: true });
+  saveState();
+  renderAlarms();
+  scheduleNotifications();
+  document.getElementById('newAlarmTime').value = '';
+  document.getElementById('newAlarmLabel').value = '';
+  document.querySelectorAll('#newAlarmDays .day-btn').forEach(b => b.classList.remove('active'));
+}
+
+// ============ NOTIFICATIONS ============
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+let notifTimers = [];
+function scheduleNotifications() {
+  notifTimers.forEach(t => clearTimeout(t));
+  notifTimers = [];
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+  const now = new Date();
+  const today = now.getDay();
+
+  state.alarms.forEach(a => {
+    if (!a.on || !a.days.includes(today)) return;
+    const [h, m] = a.time.split(':').map(Number);
+    const alarmTime = new Date(now);
+    alarmTime.setHours(h, m, 0, 0);
+    const diff = alarmTime - now;
+    if (diff > 0 && diff < 24*60*60*1000) {
+      const timer = setTimeout(() => {
+        new Notification('소방기술사 플래너', {
+          body: a.label,
+          icon: 'icon-192.png',
+          tag: a.time + a.label,
+        });
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.connect(g); g.connect(ctx.destination);
+          o.frequency.value = 600; g.gain.value = 0.4;
+          o.start(); o.stop(ctx.currentTime + 0.3);
+        } catch(e) {}
+      }, diff);
+      notifTimers.push(timer);
+    }
+  });
+}
+
+function updateNextAlarm() {
+  const now = new Date();
+  const today = now.getDay();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  let next = null;
+
+  state.alarms.forEach(a => {
+    if (!a.on || !a.days.includes(today)) return;
+    const [h, m] = a.time.split(':').map(Number);
+    const aMin = h*60 + m;
+    if (aMin > nowMin) {
+      if (!next || aMin < next.min) {
+        next = { min: aMin, label: a.label, time: a.time };
+      }
+    }
+  });
+
+  const el = document.getElementById('nextAlarm');
+  if (next) {
+    const diffMin = next.min - nowMin;
+    const dh = Math.floor(diffMin/60);
+    const dm = diffMin%60;
+    el.innerHTML = `<strong>${next.time}</strong> ${next.label}<br><span style="color:var(--accent2)">${dh > 0 ? dh+'시간 ':''}${dm}분 후</span>`;
+  } else {
+    el.textContent = '오늘 남은 알람 없음';
+  }
+}
+
+// ============ CALENDAR EXPORT (.ics) ============
+function icsDay(jsDay) {
+  // JS: 0=일,1=월...6=토 → ICS: SU,MO,TU,WE,TH,FR,SA
+  return ['SU','MO','TU','WE','TH','FR','SA'][jsDay];
+}
+
+function generateICS(alarms, filename) {
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const stamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}T${pad(now.getHours())}${pad(now.getMinutes())}00`;
+
+  let ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//소방기술사 플래너//KO',
+    'CALSCALE:GREGORIAN',
+    'X-WR-CALNAME:소방기술사 학습 알람',
+    'X-WR-TIMEZONE:Asia/Seoul',
+    'BEGIN:VTIMEZONE',
+    'TZID:Asia/Seoul',
+    'BEGIN:STANDARD',
+    'DTSTART:19700101T000000',
+    'TZOFFSETFROM:+0900',
+    'TZOFFSETTO:+0900',
+    'END:STANDARD',
+    'END:VTIMEZONE',
+  ];
+
+  alarms.forEach((a, idx) => {
+    if (!a.on) return;
+    const [h, m] = a.time.split(':').map(Number);
+    // Start from tomorrow
+    const start = new Date(now);
+    start.setDate(start.getDate() + 1);
+    start.setHours(h, m, 0, 0);
+    const startStr = `${start.getFullYear()}${pad(start.getMonth()+1)}${pad(start.getDate())}T${pad(h)}${pad(m)}00`;
+    const endMin = m + 10;
+    const endH = h + Math.floor(endMin / 60);
+    const endM = endMin % 60;
+    const endStr = `${start.getFullYear()}${pad(start.getMonth()+1)}${pad(start.getDate())}T${pad(endH)}${pad(endM)}00`;
+    // Recurrence until 2028-03-10
+    const byDay = a.days.map(d => icsDay(d)).join(',');
+
+    ics.push(
+      'BEGIN:VEVENT',
+      `UID:fpe-alarm-${idx}-${Date.now()}@planner`,
+      `DTSTAMP:${stamp}`,
+      `DTSTART;TZID=Asia/Seoul:${startStr}`,
+      `DTEND;TZID=Asia/Seoul:${endStr}`,
+      `RRULE:FREQ=WEEKLY;BYDAY=${byDay};UNTIL=20280310T235959Z`,
+      `SUMMARY:🔥 ${a.label}`,
+      `DESCRIPTION:소방기술사 합격 플래너 알람`,
+      'BEGIN:VALARM',
+      'TRIGGER:-PT0M',
+      'ACTION:DISPLAY',
+      `DESCRIPTION:${a.label}`,
+      'END:VALARM',
+      'BEGIN:VALARM',
+      'TRIGGER:-PT0M',
+      'ACTION:AUDIO',
+      'END:VALARM',
+      'END:VEVENT'
+    );
+  });
+
+  ics.push('END:VCALENDAR');
+
+  const blob = new Blob([ics.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function exportAllAlarms() {
+  generateICS(state.alarms, '소방기술사_전체알람.ics');
+}
+
+function exportWeekdayAlarms() {
+  const weekday = state.alarms.filter(a => a.days.some(d => d >= 1 && d <= 5));
+  generateICS(weekday, '소방기술사_평일알람.ics');
+}
+
+function exportWeekendAlarms() {
+  const weekend = state.alarms.filter(a => a.days.some(d => d === 0 || d === 6));
+  generateICS(weekend, '소방기술사_주말알람.ics');
+}
+
+// ============ INIT ============
+function init() {
+  requestNotificationPermission();
+  updateHeader();
+  renderDaySelector();
+  renderSchedule();
+  renderLogs();
+  renderSubnote();
+  renderMilestones();
+  renderAlarms();
+  updateStats();
+  scheduleNotifications();
+  updateTimerDisplay();
+
+  // Refresh every minute
+  setInterval(() => {
+    updateNextAlarm();
+    updateHeader();
+  }, 60000);
+}
+
+init();
+
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
