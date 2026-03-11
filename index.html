@@ -527,23 +527,39 @@ body {
 
 <div id="tab-alarm" class="tab-content">
   <div class="card" style="background:linear-gradient(135deg,#1a1a2e,#2d1f3d);border:1px solid rgba(233,69,96,0.3)">
-    <div class="card-title"><span class="icon">&#128197;</span> 캘린더 알람 내보내기</div>
+    <div class="card-title"><span class="icon">&#128197;</span> iPhone 캘린더 구독 (추천)</div>
     <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5">
-      아래 버튼을 누르면 .ics 파일이 다운로드됩니다.<br>
-      핸드폰에서 열면 기본 캘린더에 반복 알람이 자동 등록됩니다.
+      아래 버튼을 누르면 iPhone 캘린더 앱이 열리고<br>
+      <strong style="color:var(--accent2)">2028년 3월까지 반복 알람이 자동 등록</strong>됩니다.
     </p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="log-add-btn" onclick="exportAllAlarms()" style="flex:1;padding:14px;font-size:14px">
-        &#128276; 전체 알람 캘린더로 내보내기
-      </button>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <a href="webcal://sure79.github.io/fire-engineer-app/alarms-all.ics" class="log-add-btn" style="flex:1;padding:14px;font-size:14px;text-align:center;text-decoration:none;display:block;border-radius:10px">
+        &#128276; 전체 알람 구독 (평일+주말 12개)
+      </a>
+      <div style="display:flex;gap:8px">
+        <a href="webcal://sure79.github.io/fire-engineer-app/alarms-weekday.ics" class="log-add-btn" style="flex:1;background:var(--blue);text-align:center;text-decoration:none;display:block;border-radius:10px">
+          &#128188; 평일만 (5개)
+        </a>
+        <a href="webcal://sure79.github.io/fire-engineer-app/alarms-weekend.ics" class="log-add-btn" style="flex:1;background:var(--green);text-align:center;text-decoration:none;display:block;border-radius:10px">
+          &#127774; 주말만 (7개)
+        </a>
+      </div>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-      <button class="log-add-btn" onclick="exportWeekdayAlarms()" style="flex:1;background:var(--blue)">
-        &#128188; 평일 알람만
-      </button>
-      <button class="log-add-btn" onclick="exportWeekendAlarms()" style="flex:1;background:var(--green)">
-        &#127774; 주말 알람만
-      </button>
+    <p style="font-size:11px;color:var(--text2);margin-top:10px;line-height:1.5">
+      &#9989; 앱 꺼져 있어도 알림 울림<br>
+      &#9989; 잠금화면에서 알림 표시<br>
+      &#9989; 캘린더 앱에서 언제든 해제 가능
+    </p>
+  </div>
+  <div class="card" style="border:1px solid rgba(255,255,255,0.1)">
+    <div class="card-title"><span class="icon">&#128161;</span> 안 될 경우 직접 등록</div>
+    <p style="font-size:12px;color:var(--text2);line-height:1.8">
+      iPhone 설정 &gt; 캘린더 &gt; 계정 &gt; 캘린더 구독 추가<br>
+      아래 주소를 복사해서 붙여넣기:
+    </p>
+    <div style="background:var(--bg);border-radius:8px;padding:10px;margin-top:8px;position:relative">
+      <code id="icsUrl" style="font-size:11px;word-break:break-all;color:var(--accent2)">https://sure79.github.io/fire-engineer-app/alarms-all.ics</code>
+      <button onclick="copyIcsUrl()" style="position:absolute;right:6px;top:6px;background:var(--accent);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer" id="copyBtn">복사</button>
     </div>
   </div>
   <div class="card">
@@ -1052,109 +1068,25 @@ function updateNextAlarm() {
   }
 }
 
-// ============ CALENDAR EXPORT (.ics) ============
-function icsDay(jsDay) {
-  // JS: 0=일,1=월...6=토 → ICS: SU,MO,TU,WE,TH,FR,SA
-  return ['SU','MO','TU','WE','TH','FR','SA'][jsDay];
-}
-
-function generateICS(alarms, filename) {
-  const now = new Date();
-  const pad = n => String(n).padStart(2,'0');
-  const stamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}T${pad(now.getHours())}${pad(now.getMinutes())}00`;
-
-  let ics = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//소방기술사 플래너//KO',
-    'CALSCALE:GREGORIAN',
-    'X-WR-CALNAME:소방기술사 학습 알람',
-    'X-WR-TIMEZONE:Asia/Seoul',
-    'BEGIN:VTIMEZONE',
-    'TZID:Asia/Seoul',
-    'BEGIN:STANDARD',
-    'DTSTART:19700101T000000',
-    'TZOFFSETFROM:+0900',
-    'TZOFFSETTO:+0900',
-    'END:STANDARD',
-    'END:VTIMEZONE',
-  ];
-
-  alarms.forEach((a, idx) => {
-    if (!a.on) return;
-    const [h, m] = a.time.split(':').map(Number);
-    // Start from tomorrow
-    const start = new Date(now);
-    start.setDate(start.getDate() + 1);
-    start.setHours(h, m, 0, 0);
-    const startStr = `${start.getFullYear()}${pad(start.getMonth()+1)}${pad(start.getDate())}T${pad(h)}${pad(m)}00`;
-    const endMin = m + 10;
-    const endH = h + Math.floor(endMin / 60);
-    const endM = endMin % 60;
-    const endStr = `${start.getFullYear()}${pad(start.getMonth()+1)}${pad(start.getDate())}T${pad(endH)}${pad(endM)}00`;
-    // Recurrence until 2028-03-10
-    const byDay = a.days.map(d => icsDay(d)).join(',');
-
-    ics.push(
-      'BEGIN:VEVENT',
-      `UID:fpe-alarm-${idx}-${Date.now()}@planner`,
-      `DTSTAMP:${stamp}`,
-      `DTSTART;TZID=Asia/Seoul:${startStr}`,
-      `DTEND;TZID=Asia/Seoul:${endStr}`,
-      `RRULE:FREQ=WEEKLY;BYDAY=${byDay};UNTIL=20280310T235959Z`,
-      `SUMMARY:🔥 ${a.label}`,
-      `DESCRIPTION:소방기술사 합격 플래너 알람`,
-      'BEGIN:VALARM',
-      'TRIGGER:-PT0M',
-      'ACTION:DISPLAY',
-      `DESCRIPTION:${a.label}`,
-      'END:VALARM',
-      'BEGIN:VALARM',
-      'TRIGGER:-PT0M',
-      'ACTION:AUDIO',
-      'END:VALARM',
-      'END:VEVENT'
-    );
+// ============ CALENDAR (copy URL) ============
+function copyIcsUrl() {
+  const url = document.getElementById('icsUrl').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '완료!';
+    setTimeout(() => btn.textContent = '복사', 2000);
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '완료!';
+    setTimeout(() => btn.textContent = '복사', 2000);
   });
-
-  ics.push('END:VCALENDAR');
-
-  const icsContent = ics.join('\r\n');
-
-  // iOS Safari: data URI로 새 탭에서 열기 (Blob 다운로드 안 됨)
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-  if (isIOS || isSafari) {
-    // data: URI 방식 → iOS에서 캘린더 앱이 직접 열림
-    const dataUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(icsContent);
-    window.open(dataUri, '_blank');
-  } else {
-    // Android/PC: Blob 다운로드
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-}
-
-function exportAllAlarms() {
-  generateICS(state.alarms, '소방기술사_전체알람.ics');
-}
-
-function exportWeekdayAlarms() {
-  const weekday = state.alarms.filter(a => a.days.some(d => d >= 1 && d <= 5));
-  generateICS(weekday, '소방기술사_평일알람.ics');
-}
-
-function exportWeekendAlarms() {
-  const weekend = state.alarms.filter(a => a.days.some(d => d === 0 || d === 6));
-  generateICS(weekend, '소방기술사_주말알람.ics');
 }
 
 // ============ INIT ============
