@@ -403,6 +403,120 @@ body {
   background: none; border: none; color: var(--text2);
   font-size: 16px; cursor: pointer; padding: 0 4px;
 }
+
+/* Checkable schedule */
+.schedule-item { cursor: pointer; transition: opacity 0.3s; }
+.schedule-item.done { opacity: 0.4; }
+.schedule-item.done .schedule-label { text-decoration: line-through; }
+.schedule-check {
+  width: 20px; height: 20px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+.schedule-item.done .schedule-check {
+  border-color: var(--green);
+  background: var(--green);
+}
+.schedule-progress {
+  font-size: 12px;
+  color: var(--text2);
+  margin-top: -4px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.schedule-progress-pct { color: var(--green); font-weight: 700; }
+
+/* Daily goal */
+.daily-goal-input {
+  width: 100%;
+  background: var(--card2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 13px;
+  resize: none;
+  min-height: 42px;
+}
+.daily-goal-input::placeholder { color: var(--text2); }
+
+/* Study memo */
+.memo-textarea {
+  width: 100%;
+  background: var(--card2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 13px;
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.6;
+}
+.memo-textarea::placeholder { color: var(--text2); }
+.memo-date-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.memo-date-nav button {
+  background: var(--card2);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text);
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+}
+.memo-date-text { font-size: 14px; font-weight: 600; }
+
+/* Motivational */
+.motiv-card {
+  background: linear-gradient(135deg, #2d1f3d, #1a1a2e);
+  border: 1px solid rgba(233,69,96,0.2);
+  text-align: center;
+  padding: 20px 16px;
+}
+.motiv-text {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--accent2);
+}
+.motiv-sub { font-size: 11px; color: var(--text2); margin-top: 6px; }
+
+/* Subject tag */
+.subject-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.subject-tag {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: var(--card2);
+  color: var(--text2);
+  transition: all 0.2s;
+}
+.subject-tag.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
 </style>
 </head>
 <body>
@@ -417,14 +531,48 @@ body {
 
 <!-- Tab Contents -->
 <div id="tab-schedule" class="tab-content active">
+  <div class="card motiv-card">
+    <div class="motiv-text" id="motivText"></div>
+    <div class="motiv-sub" id="motivSub"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> 오늘의 목표</div>
+    <textarea class="daily-goal-input" id="dailyGoal" placeholder="오늘 반드시 해야 할 것 하나만 적어라" oninput="saveDailyGoal()"></textarea>
+  </div>
   <div class="day-selector" id="daySelector"></div>
   <div class="card" id="scheduleCard">
     <div class="card-title"><span class="icon">&#128197;</span> 오늘의 일정</div>
+    <div class="schedule-progress" id="scheduleProgress"></div>
     <div id="scheduleList"></div>
   </div>
   <div class="card">
     <div class="card-title"><span class="icon">&#9200;</span> 다음 알람</div>
     <div id="nextAlarm" style="font-size:13px; color:var(--text2);">알람 없음</div>
+  </div>
+</div>
+
+<div id="tab-memo" class="tab-content">
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128221;</span> 학습 메모</div>
+    <div class="memo-date-nav">
+      <button onclick="changeMemoDate(-1)">&lt;</button>
+      <span class="memo-date-text" id="memoDateText"></span>
+      <button onclick="changeMemoDate(1)">&gt;</button>
+    </div>
+    <div class="subject-tags" id="subjectTags">
+      <span class="subject-tag" onclick="setSubject('화재/소화이론',this)">화재/소화이론</span>
+      <span class="subject-tag" onclick="setSubject('소방수리학',this)">소방수리학</span>
+      <span class="subject-tag" onclick="setSubject('화재역학',this)">화재역학</span>
+      <span class="subject-tag" onclick="setSubject('소방설비설계',this)">소방설비설계</span>
+      <span class="subject-tag" onclick="setSubject('건축방재',this)">건축방재</span>
+      <span class="subject-tag" onclick="setSubject('소방법령',this)">소방법령</span>
+      <span class="subject-tag" onclick="setSubject('기타',this)">기타</span>
+    </div>
+    <textarea class="memo-textarea" id="memoText" placeholder="오늘 공부한 내용, 헷갈리는 개념, 기출 포인트 등을 기록하세요.&#10;&#10;예시:&#10;- 화재역학: 플래시오버 조건 (Thomas 식)&#10;- NFSC 103 스프링클러 수원 계산&#10;- 암기: 소화기 적응성 표" oninput="saveMemo()"></textarea>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> 최근 메모 목록</div>
+    <div id="memoHistory"></div>
   </div>
 </div>
 
@@ -591,6 +739,10 @@ body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     일정
   </button>
+  <button onclick="switchTab('memo',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    메모
+  </button>
   <button onclick="switchTab('timer',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     타이머
@@ -598,10 +750,6 @@ body {
   <button onclick="switchTab('progress',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
     현황
-  </button>
-  <button onclick="switchTab('roadmap',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-    로드맵
   </button>
   <button onclick="switchTab('alarm',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -618,15 +766,17 @@ const DAY_NAMES = ['일','월','화','수','목','금','토'];
 
 const SCHEDULES = {
   weekday: [
-    { time: '07:00', label: '기상 / 준비', tag: 'rest' },
-    { time: '07:30', label: '아침 복습 (전날 암기)', tag: 'study' },
+    { time: '06:00', label: '기상 / 세면', tag: 'rest' },
+    { time: '06:15', label: '아침 복습 (전날 암기 내용)', tag: 'study' },
+    { time: '06:45', label: '출근 준비', tag: 'rest' },
+    { time: '07:00', label: '출근 (이동 중 인강/암기카드)', tag: 'study' },
     { time: '08:00', label: 'KMCP 업무', tag: 'work' },
     { time: '12:00', label: '점심 식사', tag: 'rest' },
     { time: '12:30', label: '점심 법규 읽기', tag: 'study' },
     { time: '13:00', label: 'KMCP 업무', tag: 'work' },
     { time: '20:00', label: '저녁 식사', tag: 'rest' },
     { time: '20:30', label: '집중 공부 (서브노트/암기)', tag: 'study' },
-    { time: '22:30', label: '정리 / 다음날 준비', tag: 'rest' },
+    { time: '22:30', label: '정리 / 다음날 범위 확인', tag: 'rest' },
     { time: '23:00', label: '취침', tag: 'rest' },
   ],
   saturday: [
@@ -663,7 +813,7 @@ const MILESTONES = [
 ];
 
 const DEFAULT_ALARMS = [
-  { time:'07:00', label:'기상 + 아침 복습', days:[1,2,3,4,5], on:true },
+  { time:'06:00', label:'기상! 아침 복습 시작', days:[1,2,3,4,5], on:true },
   { time:'12:30', label:'점심 법규 읽기', days:[1,2,3,4,5], on:true },
   { time:'20:25', label:'저녁 집중 공부 준비', days:[1,2,3,4,5], on:true },
   { time:'22:25', label:'공부 마무리 5분 전', days:[1,2,3,4,5], on:true },
@@ -684,6 +834,9 @@ function loadState() {
     logs: [],
     alarms: DEFAULT_ALARMS,
     selectedDay: new Date().getDay(),
+    checkedItems: {},
+    dailyGoals: {},
+    memos: {},
   };
 }
 function saveState() { localStorage.setItem('fpe_state', JSON.stringify(state)); }
@@ -739,6 +892,26 @@ function renderDaySelector() {
   });
 }
 
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+function isChecked(dayKey, idx) {
+  return state.checkedItems[dayKey] && state.checkedItems[dayKey].includes(idx);
+}
+
+function toggleScheduleCheck(idx) {
+  const dk = todayKey();
+  if (!state.checkedItems[dk]) state.checkedItems[dk] = [];
+  const arr = state.checkedItems[dk];
+  const pos = arr.indexOf(idx);
+  if (pos >= 0) arr.splice(pos, 1);
+  else arr.push(idx);
+  saveState();
+  renderSchedule();
+}
+
 function renderSchedule() {
   const day = state.selectedDay;
   let key = 'weekday';
@@ -747,15 +920,34 @@ function renderSchedule() {
 
   const list = document.getElementById('scheduleList');
   const items = SCHEDULES[key];
-  list.innerHTML = items.map(s => `
-    <div class="schedule-item">
+  const dk = todayKey();
+  const isToday = day === new Date().getDay();
+
+  // Progress
+  const studyItems = items.filter(s => s.tag === 'study' || s.tag === 'class');
+  const checkedCount = isToday ? studyItems.filter((s, i) => {
+    const realIdx = items.indexOf(s);
+    return isChecked(dk, realIdx);
+  }).length : 0;
+  const prog = document.getElementById('scheduleProgress');
+  if (isToday && studyItems.length > 0) {
+    const pct = Math.round(checkedCount / studyItems.length * 100);
+    prog.innerHTML = `오늘 학습 완료: <span class="schedule-progress-pct">${checkedCount}/${studyItems.length} (${pct}%)</span>`;
+  } else {
+    prog.innerHTML = '';
+  }
+
+  list.innerHTML = items.map((s, i) => {
+    const checked = isToday && isChecked(dk, i);
+    return `<div class="schedule-item ${checked ? 'done' : ''}" onclick="${isToday ? `toggleScheduleCheck(${i})` : ''}">
+      ${isToday ? `<div class="schedule-check">${checked ? '&#10003;' : ''}</div>` : ''}
       <div class="schedule-time">${s.time}</div>
       <div class="schedule-label">${s.label}</div>
       <span class="schedule-tag tag-${s.tag}">${
         s.tag==='study'?'학습':s.tag==='work'?'업무':s.tag==='class'?'수업':'기타'
       }</span>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 
   updateNextAlarm();
 }
@@ -1068,6 +1260,116 @@ function updateNextAlarm() {
   }
 }
 
+// ============ MOTIVATIONAL ============
+const MOTIV_MESSAGES = [
+  { text: '"소방기술사는 기본이 잘 갖춰진 사람을 뽑는 시험이다."', sub: '화려한 답이 아니라 정확한 답이 합격이다' },
+  { text: '"서브노트가 합격을 결정한다."', sub: '시험 전날 전범위를 훑을 수 있어야 한다' },
+  { text: '"25년 전기 설계 경험이 당신의 무기다."', sub: '남들보다 2~3배 빠르게 이해할 수 있는 영역이 있다' },
+  { text: '"열심히는 필요조건이 아니다. 루틴과 시스템이 먼저다."', sub: '의지력으로 버티면 반드시 무너진다' },
+  { text: '"70% 빈출문제에 먼저 투자하라."', sub: '킬러문항보다 확실한 기본 문제가 합격을 만든다' },
+  { text: '"그림을 그려라."', sub: '답안에 플로우차트를 넣으면 분량과 점수가 동시에 올라간다' },
+  { text: '"폰 옆에 두고 2시간 앉아 있는 건 공부가 아니다."', sub: '평일 2시간의 밀도가 합불을 가른다' },
+  { text: '"첫 시험은 경험이 목적이다."', sub: '떨어져도 데이터를 얻는다. 시험장 감각이 자산이다' },
+  { text: '"체력과 건강 희생 금지."', sub: '장기전에서 이걸 희생하면 반드시 탈락한다' },
+  { text: '"2년 안에 못 붙어도 죽지 않는다."', sub: '기반을 탄탄히 쌓는 게 더 중요하다' },
+  { text: '"3회독 전에 서브노트 만들면 시간 낭비다."', sub: '순서가 있다. 이해 먼저, 정리는 그다음' },
+  { text: '"지속 가능한 페이스가 최고의 전략이다."', sub: '오늘 하루를 완벽히 보내는 것이 전부다' },
+];
+
+function renderMotivation() {
+  const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(),0,0)) / (1000*60*60*24));
+  const msg = MOTIV_MESSAGES[dayOfYear % MOTIV_MESSAGES.length];
+  document.getElementById('motivText').textContent = msg.text;
+  document.getElementById('motivSub').textContent = msg.sub;
+}
+
+// ============ DAILY GOAL ============
+function loadDailyGoal() {
+  const dk = todayKey();
+  const el = document.getElementById('dailyGoal');
+  el.value = state.dailyGoals[dk] || '';
+}
+
+function saveDailyGoal() {
+  const dk = todayKey();
+  state.dailyGoals[dk] = document.getElementById('dailyGoal').value;
+  saveState();
+}
+
+// ============ STUDY MEMO ============
+let memoDate = new Date();
+
+function memoDateKey(d) {
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+function changeMemoDate(delta) {
+  memoDate.setDate(memoDate.getDate() + delta);
+  renderMemo();
+}
+
+function setSubject(subj, el) {
+  document.querySelectorAll('.subject-tag').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const dk = memoDateKey(memoDate);
+  if (!state.memos[dk]) state.memos[dk] = {};
+  state.memos[dk]._subject = subj;
+  saveState();
+}
+
+function saveMemo() {
+  const dk = memoDateKey(memoDate);
+  if (!state.memos[dk]) state.memos[dk] = {};
+  state.memos[dk].text = document.getElementById('memoText').value;
+  saveState();
+  renderMemoHistory();
+}
+
+function renderMemo() {
+  const dk = memoDateKey(memoDate);
+  const d = memoDate;
+  const isToday = dk === todayKey();
+  document.getElementById('memoDateText').textContent =
+    `${d.getMonth()+1}/${d.getDate()} (${DAY_NAMES[d.getDay()]})${isToday ? ' - 오늘' : ''}`;
+  const memo = state.memos[dk] || {};
+  document.getElementById('memoText').value = memo.text || '';
+  // Highlight subject tag
+  document.querySelectorAll('.subject-tag').forEach(t => t.classList.remove('active'));
+  if (memo._subject) {
+    document.querySelectorAll('.subject-tag').forEach(t => {
+      if (t.textContent === memo._subject) t.classList.add('active');
+    });
+  }
+}
+
+function renderMemoHistory() {
+  const el = document.getElementById('memoHistory');
+  const keys = Object.keys(state.memos)
+    .filter(k => state.memos[k].text)
+    .sort().reverse().slice(0, 14);
+  if (keys.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text2)">아직 메모가 없습니다. 오늘부터 기록을 시작하세요!</div>';
+    return;
+  }
+  el.innerHTML = keys.map(k => {
+    const m = state.memos[k];
+    const parts = k.split('-');
+    const subj = m._subject ? `<span class="schedule-tag tag-study" style="margin-left:6px">${m._subject}</span>` : '';
+    const preview = (m.text || '').substring(0, 60).replace(/\n/g, ' ');
+    return `<div class="log-entry" onclick="jumpToMemo('${k}')" style="cursor:pointer">
+      <span class="log-entry-date">${parts[1]}/${parts[2]}${subj}</span>
+      <span style="flex:1;margin-left:8px;color:var(--text2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${preview}</span>
+    </div>`;
+  }).join('');
+}
+
+function jumpToMemo(key) {
+  const parts = key.split('-').map(Number);
+  memoDate = new Date(parts[0], parts[1]-1, parts[2]);
+  renderMemo();
+  window.scrollTo(0, 0);
+}
+
 // ============ CALENDAR (copy URL) ============
 function copyIcsUrl() {
   const url = document.getElementById('icsUrl').textContent;
@@ -1093,8 +1395,12 @@ function copyIcsUrl() {
 function init() {
   requestNotificationPermission();
   updateHeader();
+  renderMotivation();
+  loadDailyGoal();
   renderDaySelector();
   renderSchedule();
+  renderMemo();
+  renderMemoHistory();
   renderLogs();
   renderSubnote();
   renderMilestones();
